@@ -1,9 +1,13 @@
+import glob
 import os
+import random
 from gtts import gTTS
-from moviepy import AudioFileClip, TextClip, concatenate_audioclips, AudioClip, concatenate_videoclips
+from moviepy import AudioFileClip, ColorClip, CompositeVideoClip, ImageClip, TextClip, concatenate_audioclips, AudioClip, concatenate_videoclips
+from icrawler.builtin import GoogleImageCrawler
 
 PHRASES_FILE = "phrases.txt"
 OUTPUT_VIDEO = "result.mp4"
+TEMP_IMAGES_DIR = "temp_images"
 
 
 def load_phrases(filepath: str):
@@ -55,9 +59,37 @@ def build_audio_clips(phrases, silence_duration: float = 1) -> (list, list):
     return clips, temp_files
 
 
+def download_image(query: str, idx: int) -> str:
+    # Создаем директорию, если ее нет
+    os.makedirs(TEMP_IMAGES_DIR, exist_ok=True)
+    
+    # Очистка временной директории (удаляем все файлы в ней)
+    for filename in os.listdir(TEMP_IMAGES_DIR):
+        file_path = os.path.join(TEMP_IMAGES_DIR, filename)
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+    
+    # Создаем экземпляр краулера с указанием директории хранения
+    crawler = GoogleImageCrawler(storage={'root_dir': TEMP_IMAGES_DIR})
+    
+    # Скачиваем несколько изображений (например, до 3) для большего выбора
+    crawler.crawl(keyword=query, max_num=3)
+    
+    # Получаем список скачанных файлов
+    images = glob.glob(os.path.join(TEMP_IMAGES_DIR, "*"))
+    if images:
+        # Выбираем случайное изображение из найденных
+        chosen = random.choice(images)
+        new_filename = os.path.join(TEMP_IMAGES_DIR, f"image_{idx}.jpg")
+        os.rename(chosen, new_filename)
+        return new_filename
+    else:
+        return None
+
 def build_video_clips(phrases, silence_duration: float = 1) -> (list, list):
     video_clips = []
     temp_files = []
+    temp_img_files = []
     
     for idx, (eng, rus) in enumerate(phrases):
         # Генерация аудио для английской и русской версии
@@ -83,6 +115,15 @@ def build_video_clips(phrases, silence_duration: float = 1) -> (list, list):
         ])
         
         total_duration = combined_audio.duration
+
+        image_file = download_image(eng, idx)
+        if image_file:
+            temp_img_files.append(image_file)
+
+            img_clip = ImageClip(image_file).resized(new_size=(1280, 720)).with_duration(total_duration)
+        else:
+            # Если изображение не найдено, создаем черный фон
+            img_clip = ImageClip("black", duration=total_duration, size=(1280, 720))
         
         # Создаем текстовый видеоклип с оверлеем фразы
         text = f"EN: {eng}\nRU: {rus}"
@@ -91,15 +132,27 @@ def build_video_clips(phrases, silence_duration: float = 1) -> (list, list):
             text,
             font_size=50,
             color='white',
-            bg_color='black',
-            size=(1280, 720),
-            method='caption'
+            # bg_color='black',
+            # size=(1280, 720),
+            method='label'
         ).with_duration(total_duration)
+
+        padding = 20
+        bg_width = txt_clip.w + 2 * padding
+        bg_height = txt_clip.h + 2 * padding
+        bg_clip = ColorClip(size=(bg_width, bg_height), color=(0, 0, 0)).with_duration(total_duration)
+
+        text_with_bg = CompositeVideoClip([
+            bg_clip.with_position("center"),
+            txt_clip.with_position("center")
+        ]).with_duration(total_duration)
+
+        text_with_bg = text_with_bg.with_position(("center", "bottom"))
         
         # Накладываем аудио на текстовый клип
-        video_clip = txt_clip.with_audio(combined_audio)
+        composite_clip = CompositeVideoClip([img_clip, text_with_bg]).with_audio(combined_audio)
         
-        video_clips.append(video_clip)
+        video_clips.append(composite_clip)
     
     return video_clips, temp_files
 

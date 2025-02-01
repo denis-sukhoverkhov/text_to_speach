@@ -6,5 +6,6 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "gtts>=2.5.4",
+    "icrawler>=0.6.9",
     "moviepy>=2.1.2",
 ]
