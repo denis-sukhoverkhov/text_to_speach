@@ -81,7 +81,7 @@ i should probably circulate ||| мне наверное стоит погуля�
 Sorry I didn’t catch that. ||| Извините, я этого не уловил.
 face it  ||| признай это
 I gained valuable experience in coding during my time at Apple ||| За время работы в Apple я приобрел ценный опыт программирования.
-I was a senior backend developer at Excess where I developed billing service. ||| Я был старшим бэкенд-разработчиком в Excess, где я разрабатывал биллинговый сервис.
+I was a senior backend developer at Excess where I developed billing service. ||| Я был старшим бэкенд-разработчиком в Exness, где я разрабатывал биллинговый сервис.
 I oversaw companies ||| я курировал компании
 I played a key role in developing billing system ||| Я сыграл ключевую роль в разработке биллинговой системы.
 I successfully developed business features in billing domain. ||| Я успешно разработал бизнес-функции в области биллинга.
@@ -183,3 +183,6 @@ LOL - laugh out loud ||| смеяться в голос
 TBH - to be honest ||| если честно
 BTW - by the way ||| кстати
 NGL - not gonna lie ||| не буду врать
+Thanks for having me ||| спасибо, что пригласили меня.
+I'm looking forward ||| я с нетерпением жду.
+It’s great to have you ||| здорово, что вы пришли.
